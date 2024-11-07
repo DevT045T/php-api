@@ -171,7 +171,7 @@ class API
         ];
 
         $wrapper = $defaultWrapper;
-        if ($this->customWrapper) {
+        if (isset($this->customWrapper)) {
             $wrapper = $this->customWrapper;
         }
 
