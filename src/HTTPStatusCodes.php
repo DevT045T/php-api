@@ -1,5 +1,7 @@
 <?php
 
+namespace devt045t;
+
 /**
  * Class HTTPStatusCodes
  * 
