@@ -21,11 +21,12 @@ class API
     public string $requesMethod;
 
     /**
-     * The response that the API returns to the user
+     * The response data that the API returns to the user
      * 
      * @var mixed
      */
     public mixed $response;
+
 
     /**
      * The response code that the API returns to the user
@@ -36,6 +37,24 @@ class API
     public int $responseCode = 200;
 
     /**
+     * The final response with all the data and the correct response wrapper
+     * 
+     * @var array
+     */
+    private array $finalResponse;
+
+    /**
+     * The start time of the script.
+     *
+     * This property holds the timestamp of when the script execution began.
+     * It is used to calculate the runtime of the script by comparing it with the current time
+     * at the point where the script's execution ends.
+     *
+     * @var int The start time of the script (in seconds).
+     */
+    private int $scriptStartTime;
+
+    /**
      * Constructor that initializes the request method by retrieving it from the server.
      * 
      * This constructor fetches the HTTP request method from the global `$_SERVER` array,
@@ -43,6 +62,7 @@ class API
      */
     public function __construct()
     {
+        $this->scriptStartTime = microtime(true);
         $this->requesMethod = $_SERVER["REQUEST_METHOD"];
     }
 
@@ -109,7 +129,77 @@ class API
     {
         header("Content-Type: application/json");
         http_response_code($this->responseCode);
-        echo json_encode($this->response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+        $this->prepareResponseWrapper();
+
+        echo json_encode($this->finalResponse, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         exit;
+    }
+
+    /**
+     * Prepares the response wrapper by wrapping the response with metadata.
+     *
+     * This method checks if there is any customization for the response wrapper,
+     * and if not, it uses the default wrapper. It then processes each item in the 
+     * wrapper template, replacing placeholders with actual values.
+     *
+     * @return self
+     */
+    protected function prepareResponseWrapper(): self
+    {
+        $defaultWrapper = [
+            "meta" => [
+                "response_code" => "{{ response_code }}",
+                "host" => "{{ host }}",
+                "count" => "{{ count }}",
+                "runtime" => "{{ runtime }}"
+            ],
+            "data" => $this->response
+        ];
+
+        /**
+         * @TODO => Check whether the customization has it's own wrapper,
+         * if not use the default one
+         */
+
+        $wrapper = $defaultWrapper;
+
+        foreach ($wrapper as $key => $wrappedChild) {
+            foreach ($wrappedChild as $childKey => $child) {
+                $wrapper[$key][$childKey] = $this->parseWrapperTemplate($child);
+            }
+        }
+
+        $this->finalResponse = $wrapper;
+
+        return $this;
+    }
+
+    /**
+     * Parses the wrapper template and replaces placeholders with actual values.
+     *
+     * This function replaces placeholders like {{ response_code }}, {{ host }},
+     * {{ count }}, and {{ runtime }} with their corresponding values from the 
+     * current class context, such as response code, host, count of data, and script runtime.
+     *
+     * @param string $templateItem The template string containing placeholders.
+     * @return mixed The parsed string with placeholders replaced by actual values.
+     */
+    private function parseWrapperTemplate(string $templateItem): mixed
+    {
+        $placeholders = [
+            "{{ response_code }}" => $this->responseCode,
+            "{{ host }}" => isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on" ? "https://" : "http://" . $_SERVER["HTTP_HOST"],
+            "{{ count }}" => is_array($this->response) || is_object($this->response) ? count($this->response) : 0,
+            "{{ runtime }}" => microtime(true) - $this->scriptStartTime
+        ];
+
+        foreach ($placeholders as $placeholder => $replacement) {
+            if (strpos($templateItem, $placeholder) !== false) {
+                $templateItem = str_replace($placeholder, $replacement, $templateItem);
+            }
+        }
+
+        return $templateItem;
     }
 }
