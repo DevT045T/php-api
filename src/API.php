@@ -50,9 +50,22 @@ class API
      * It is used to calculate the runtime of the script by comparing it with the current time
      * at the point where the script's execution ends.
      *
-     * @var int The start time of the script (in seconds).
+     * @var float The start time of the script (in seconds).
      */
-    private int $scriptStartTime;
+    private float $scriptStartTime;
+
+
+    /**
+     * Custom wrapper to modify the structure of the response.
+     *
+     * This array holds the customization options for the response wrapper.
+     * It can be used to override the default wrapper structure, allowing
+     * for more control over the response format.
+     *
+     * @var array The custom response wrapper.
+     */
+    private array $customWrapper;
+
 
     /**
      * Constructor that initializes the request method by retrieving it from the server.
@@ -154,19 +167,21 @@ class API
                 "count" => "{{ count }}",
                 "runtime" => "{{ runtime }}"
             ],
-            "data" => $this->response
+            "data" => "{{ data }}"
         ];
 
-        /**
-         * @TODO => Check whether the customization has it's own wrapper,
-         * if not use the default one
-         */
-
         $wrapper = $defaultWrapper;
+        if ($this->customWrapper) {
+            $wrapper = $this->customWrapper;
+        }
 
         foreach ($wrapper as $key => $wrappedChild) {
-            foreach ($wrappedChild as $childKey => $child) {
-                $wrapper[$key][$childKey] = $this->parseWrapperTemplate($child);
+            if (is_array($wrappedChild)) {
+                foreach ($wrappedChild as $childKey => $child) {
+                    $wrapper[$key][$childKey] = $this->parseWrapperTemplate($child);
+                }
+            } else {
+                $wrapper[$key] = $this->parseWrapperTemplate($wrappedChild);
             }
         }
 
@@ -182,24 +197,45 @@ class API
      * {{ count }}, and {{ runtime }} with their corresponding values from the 
      * current class context, such as response code, host, count of data, and script runtime.
      *
-     * @param string $templateItem The template string containing placeholders.
+     * @param mixed $templateItem The template string containing placeholders.
      * @return mixed The parsed string with placeholders replaced by actual values.
      */
-    private function parseWrapperTemplate(string $templateItem): mixed
+    private function parseWrapperTemplate(mixed $templateItem): mixed
     {
         $placeholders = [
             "{{ response_code }}" => $this->responseCode,
             "{{ host }}" => isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on" ? "https://" : "http://" . $_SERVER["HTTP_HOST"],
             "{{ count }}" => is_array($this->response) || is_object($this->response) ? count($this->response) : 0,
-            "{{ runtime }}" => microtime(true) - $this->scriptStartTime
+            "{{ runtime }}" => microtime(true) - $this->scriptStartTime,
+            "{{ data }}" => $this->response,
         ];
 
         foreach ($placeholders as $placeholder => $replacement) {
             if (strpos($templateItem, $placeholder) !== false) {
-                $templateItem = str_replace($placeholder, $replacement, $templateItem);
+                if (is_string($replacement)) {
+                    $templateItem = str_replace($placeholder, $replacement, $templateItem);
+                }
+                $templateItem = $replacement;
             }
         }
 
         return $templateItem;
+    }
+
+    /**
+     * Set the custom wrapper for the response.
+     *
+     * This method allows setting a custom wrapper structure to modify the 
+     * format of the response. The provided array will replace the default 
+     * wrapper, offering more flexibility in how the response is structured.
+     *
+     * @param array $customWrapper The custom wrapper array to set for the response.
+     * 
+     * @return self The current instance of the class (for method chaining).
+     */
+    public function setCustomWrapper(array $customWrapper): self
+    {
+        $this->customWrapper = $customWrapper;
+        return $this;
     }
 }
