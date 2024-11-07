@@ -35,9 +35,6 @@ class API
      */
     public int $responseCode = 200;
 
-
-
-
     /**
      * Constructor that initializes the request method by retrieving it from the server.
      * 
@@ -74,24 +71,24 @@ class API
      * 
      * @return API Returns the current instance of the API class for method chaining.
      */
-    public function setResponse($data): API
+    public function setResponse($data): self
     {
         $this->response = $data;
         return $this;
     }
 
     /**
-     * Sets the response code for the API response.
+     * Sets the HTTP response code for the API response.
      * 
-     * This method accepts an integer representing the HTTP response code (e.g., 200 for success, 
-     * 404 for not found) and stores it in the `responseCode` property. It returns the current 
-     * instance of the API class to enable method chaining.
+     * This method sets the response code to be returned in the API response. The code is typically
+     * an integer representing the HTTP status code (e.g., 200 for success, 404 for not found). 
+     * You can use the constants from the `HTTPStatusCodes` class for convenience.
      * 
-     * @param int $responseCode The HTTP response code to be set (e.g., 200, 404, 500, etc.).
+     * @param int $responseCode The HTTP status code (e.g., 200, 404, 500, etc.).
      * 
-     * @return API Returns the current instance of the API class for method chaining.
+     * @return $this The current instance of the API class for method chaining.
      */
-    public function setResponseCode(int $responseCode): API
+    public function setResponseCode(int $responseCode): self
     {
         $this->responseCode = $responseCode;
         return $this;
@@ -108,7 +105,7 @@ class API
      * 
      * @return void This method does not return a value. It sends the response and exits the script.
      */
-    public function send()
+    public function send(): void
     {
         header("Content-Type: application/json");
         http_response_code($this->responseCode);
