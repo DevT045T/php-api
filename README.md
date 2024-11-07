@@ -95,6 +95,7 @@ The response will be wrapped in the custom format:
 - `setCustomWrapper(array $wrapper)`: Sets a custom wrapper for the response. If no custom wrapper is provided, the default one is used.
 - `getRequestMethod()`: Returns the HTTP request method (GET, POST, PUT, DELETE).
 - `prepareResponseWrapper()`: Prepares the response based on the current wrapper settings.
+- `getAllParameters()`: Returns all given GET and POST parameters as an array.
 
 ## Configuration Options
 

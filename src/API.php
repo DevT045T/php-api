@@ -56,6 +56,15 @@ class API
      */
     private float $scriptStartTime;
 
+    /**
+     * An array to store GET and POST parameters.
+     *
+     * This private property holds all the parameters from the GET and POST requests.
+     * It is used internally to manage incoming data for processing.
+     * 
+     * @var array An array that contains both GET and POST parameters.
+     */
+    private array $parameters = [];
 
     /**
      * Custom wrapper to modify the structure of the response.
@@ -77,6 +86,8 @@ class API
      */
     public function __construct()
     {
+        $this->parameters = [...$_POST, ...$_GET];
+
         $this->scriptStartTime = microtime(true);
         $this->requesMethod = $_SERVER["REQUEST_METHOD"];
     }
@@ -239,5 +250,19 @@ class API
     {
         $this->customWrapper = $customWrapper;
         return $this;
+    }
+
+    /**
+     * Retrieves all GET and POST parameters.
+     *
+     * This method returns an array containing all parameters from the GET and POST
+     * requests. It provides access to the stored parameters for further processing
+     * or validation.
+     *
+     * @return array An array containing all GET and POST parameters.
+     */
+    public function getAllParameters(): array
+    {
+        return $this->parameters;
     }
 }
