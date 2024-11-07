@@ -14,36 +14,6 @@ This framework can be easily integrated into any PHP project using Composer.
 - **Flexible HTTP Method Support**: Supports GET, POST, PUT, DELETE HTTP methods.
 - **Meta Data**: The response includes metadata such as response code, server host, number of results, and script execution time.
 
-## Installation
-
-### 1. Install via Composer
-
-Add the PHP-API Framework as a Composer dependency in your project. If you don't have a `composer.json` file yet, you can create one by running the following command:
-
-```bash
-composer init
-```
-
-Then, add the framework to your project:
-
-```bash
-composer require devt045t/php-api
-```
-
-This will download the package and install it in your `vendor/` directory.
-
-### 2. Include Composer's Autoloader
-
-Once installed, include Composer’s autoloader at the beginning of your PHP script:
-
-```php
-require 'vendor/autoload.php';
-```
-
-This ensures that the PHP-API framework is properly loaded and available for use.
-
----
-
 ## Usage
 
 Here is how you can use the `API` class in your project.
