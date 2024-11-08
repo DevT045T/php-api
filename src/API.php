@@ -3,7 +3,7 @@
 namespace devt045t;
 
 /**
- * Class APIRequest
+ * Class API
  * 
  * This class handles the request method for the API. It retrieves and stores the HTTP request
  * method (e.g., GET, POST, etc.) from the server, and provides a method to access the request method.
