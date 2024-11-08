@@ -20,7 +20,14 @@ class API
      * 
      * @var string
      */
-    public string $requesMethod;
+    public string $requestMethod;
+
+    /**
+     * The allowed HTTP request methods (e.g., GET, POST, PUT, DELETE).
+     * 
+     * @var array
+     */
+    private array $allowedRequestMethods;
 
     /**
      * The response data that the API returns to the user
@@ -97,13 +104,31 @@ class API
     private array $customWrapper;
 
     /**
-     * @var APIParameter[] An array of allowed API parameters.
-     * 
      * This property holds an array of `APIParameter` objects that define the allowed
      * parameters for the API request. Each `APIParameter` object includes information
      * such as the parameter name, whether it is required, and its expected data type.
+     * 
+     * @var APIParameter[] An array of allowed API parameters.
      */
     private array $allowedParameters = [];
+
+    /**
+     * The error message that will be included in the error response.
+     * This message provides a brief description of the error encountered.
+     * 
+     * @var string Default is a empty message
+     */
+    private string $errorMessage;
+
+    /**
+     * The additional details related to the error.
+     * This attribute may include further information, such as specific validation errors
+     * or any relevant data that can help the user or developer understand the cause
+     * of the error more clearly.
+     * 
+     * @var mixed
+     */
+    private mixed $errorDetails;
 
     /**
      * Constructor that initializes the request method by retrieving it from the server.
@@ -117,8 +142,11 @@ class API
         $this->GETParameters = $_GET;
         $this->POSTParameters = [...(array)json_decode(file_get_contents('php://input')), ...$_POST];
 
+        $this->errorDetails = [];
+        $this->errorMessage = "";
+
         $this->scriptStartTime = microtime(true);
-        $this->requesMethod = $_SERVER["REQUEST_METHOD"];
+        $this->requestMethod = $_SERVER["REQUEST_METHOD"];
     }
 
     /**
@@ -131,8 +159,27 @@ class API
      */
     public function getRequestMethod(): string
     {
-        return $this->requesMethod;
+        return $this->requestMethod;
     }
+
+    /**
+     * Sets the allowed request methods for the API.
+     * 
+     * This method allows you to define which HTTP request methods (e.g., GET, POST, PUT, DELETE) 
+     * are allowed for the current API endpoint. By passing an array, you can allow multiple 
+     * request methods for a single endpoint. This is useful for defining flexible API behavior 
+     * where more than one HTTP method can be used for the same resource.
+     * 
+     * @param array $requestMethods An array of allowed HTTP request methods (e.g., ['GET', 'POST', 'PUT']).
+     * 
+     * @return self Returns the current instance for method chaining.
+     */
+    public function setAllowedRequestMethod(array $requestMethods): self
+    {
+        $this->allowedRequestMethods = $requestMethods;
+        return $this;
+    }
+
 
     /**
      * Sets the response data for the API.
@@ -284,6 +331,47 @@ class API
     }
 
     /**
+     * Validates the request method against the allowed methods.
+     * 
+     * This method checks if the current request method is one of the allowed methods defined for
+     * the API endpoint. If the request method is not allowed, an error response will be sent
+     * with a 400 Bad Request status code.
+     * 
+     * @return void
+     */
+    public function validate(): void
+    {
+        if (!in_array($this->requestMethod, $this->allowedRequestMethods)) {
+            $this->sendErrorResponse(HTTPStatusCodes::BAD_REQUEST, "The request method is not allowed for this resource.", [$this->requestMethod]);
+        }
+    }
+
+    /**
+     * Sends an error response with the given status code and error message.
+     * 
+     * This method prepares an error response with the specified HTTP status code and error message.
+     * It then sends the response to the client.
+     * 
+     * @param int $responseCode The HTTP status code for the error response.
+     * @param string $errorMessage The error message to be included in the response.
+     * @param mixed $errorDetails Default is an empty array. The error details to describe the error in detail.
+     * 
+     * @return void
+     */
+    public function sendErrorResponse(int $responseCode, string $errorMessage, mixed $errorDetails = []): void
+    {
+        $this->response = null;
+        $this->responseCode = $responseCode;
+
+        $this->response = [
+            "error_message" => $errorMessage,
+            "error_details" => $errorDetails
+        ];
+
+        $this->send();
+    }
+
+    /**
      * Prepares the response wrapper by wrapping the response with metadata.
      *
      * This method checks if there is any customization for the response wrapper,
@@ -301,7 +389,7 @@ class API
                 "count" => "{{ count }}",
                 "runtime" => "{{ runtime }}"
             ],
-            "data" => "{{ data }}"
+            "data" => "{{ data }}",
         ];
 
         $wrapper = $defaultWrapper;
@@ -340,11 +428,24 @@ class API
             "{{ response_code }}" => $this->responseCode,
             "{{ host }}" => isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on" ? "https://" : "http://" . $_SERVER["HTTP_HOST"],
             "{{ count }}" => is_array($this->response) || is_object($this->response) ? count($this->response) : 0,
+            /**
+             * @TODO => Fix in future, it makes me cry 😭
+             * Errors will be part in data for now :c
+             */
+            // "{{ error_details }}" => $this->errorDetails,
+            // "{{ error_message }}" => $this->errorMessage,
             "{{ runtime }}" => microtime(true) - $this->scriptStartTime,
             "{{ data }}" => $this->response,
         ];
 
+        if (!is_string($templateItem)) {
+            return $templateItem;
+        }
+
         foreach ($placeholders as $placeholder => $replacement) {
+            if (is_null($placeholder)) {
+                return $templateItem;
+            }
             if (strpos($templateItem, $placeholder) !== false) {
                 if (is_string($replacement)) {
                     $templateItem = str_replace($placeholder, $replacement, $templateItem);

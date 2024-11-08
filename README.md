@@ -124,6 +124,8 @@ The response will be wrapped in the custom format:
 - `getPOSTParameters()`: Returns all given POST parameters as an array.
 - `__get(string $property)`: ✨Magic✨ getter method for accessing properties dynamically through the `$parameters` array. Returns the property’s value or null if not found.
 - `addParameter(APIParameter $parameter)`: Adds an allowed API parameter to the API instance. This defines the name, required status, and data type of the parameter.
+- `validate()`: Validates that all required data is correct and in the expected format. If any errors are found, an appropriate error message is returned.
+- `sendErrorResponse(int $responseCode, string $errorMessage, array $errorDetails = [])`: Sends a generic error response to the client, including a status code, an error message, and optional additional details about the error cause.
 
 ## API Parameter Management
 
