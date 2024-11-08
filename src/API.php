@@ -29,7 +29,6 @@ class API
      */
     public mixed $response;
 
-
     /**
      * The response code that the API returns to the user
      * Default is `OK - 200`
@@ -97,6 +96,14 @@ class API
      */
     private array $customWrapper;
 
+    /**
+     * @var APIParameter[] An array of allowed API parameters.
+     * 
+     * This property holds an array of `APIParameter` objects that define the allowed
+     * parameters for the API request. Each `APIParameter` object includes information
+     * such as the parameter name, whether it is required, and its expected data type.
+     */
+    private array $allowedParameters = [];
 
     /**
      * Constructor that initializes the request method by retrieving it from the server.
@@ -185,79 +192,6 @@ class API
     }
 
     /**
-     * Prepares the response wrapper by wrapping the response with metadata.
-     *
-     * This method checks if there is any customization for the response wrapper,
-     * and if not, it uses the default wrapper. It then processes each item in the 
-     * wrapper template, replacing placeholders with actual values.
-     *
-     * @return self
-     */
-    protected function prepareResponseWrapper(): self
-    {
-        $defaultWrapper = [
-            "meta" => [
-                "response_code" => "{{ response_code }}",
-                "host" => "{{ host }}",
-                "count" => "{{ count }}",
-                "runtime" => "{{ runtime }}"
-            ],
-            "data" => "{{ data }}"
-        ];
-
-        $wrapper = $defaultWrapper;
-        if (isset($this->customWrapper)) {
-            $wrapper = $this->customWrapper;
-        }
-
-        foreach ($wrapper as $key => $wrappedChild) {
-            if (is_array($wrappedChild)) {
-                foreach ($wrappedChild as $childKey => $child) {
-                    $wrapper[$key][$childKey] = $this->parseWrapperTemplate($child);
-                }
-            } else {
-                $wrapper[$key] = $this->parseWrapperTemplate($wrappedChild);
-            }
-        }
-
-        $this->finalResponse = $wrapper;
-
-        return $this;
-    }
-
-    /**
-     * Parses the wrapper template and replaces placeholders with actual values.
-     *
-     * This function replaces placeholders like {{ response_code }}, {{ host }},
-     * {{ count }}, and {{ runtime }} with their corresponding values from the 
-     * current class context, such as response code, host, count of data, and script runtime.
-     *
-     * @param mixed $templateItem The template string containing placeholders.
-     * @return mixed The parsed string with placeholders replaced by actual values.
-     */
-    private function parseWrapperTemplate(mixed $templateItem): mixed
-    {
-        $placeholders = [
-            "{{ response_code }}" => $this->responseCode,
-            "{{ host }}" => isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on" ? "https://" : "http://" . $_SERVER["HTTP_HOST"],
-            "{{ count }}" => is_array($this->response) || is_object($this->response) ? count($this->response) : 0,
-            "{{ runtime }}" => microtime(true) - $this->scriptStartTime,
-            "{{ data }}" => $this->response,
-        ];
-
-        foreach ($placeholders as $placeholder => $replacement) {
-            if (strpos($templateItem, $placeholder) !== false) {
-                if (is_string($replacement)) {
-                    $templateItem = str_replace($placeholder, $replacement, $templateItem);
-                }
-                $templateItem = $replacement;
-            }
-        }
-
-        return $templateItem;
-    }
-
-    /**
      * Set the custom wrapper for the response.
      *
      * This method allows setting a custom wrapper structure to modify the 
@@ -329,5 +263,96 @@ class API
     public function __get(string $property): mixed
     {
         return $this->parameters["$property"];
+    }
+
+    /**
+     * Adds an allowed parameter to the list of allowed API parameters.
+     * 
+     * This method accepts an `APIParameter` object, which defines the name, 
+     * required status, and data type of a parameter. It adds this parameter 
+     * to the `allowedParameters` array, which is later used to validate incoming
+     * API requests.
+     * 
+     * @param APIParameter $parameter The `APIParameter` object to add.
+     * 
+     * @return self Returns the current instance of the class, allowing for method chaining.
+     */
+    public function addParameter(APIParameter $parameter): self
+    {
+        $this->allowedParameters[] = $parameter;
+        return $this;
+    }
+
+    /**
+     * Prepares the response wrapper by wrapping the response with metadata.
+     *
+     * This method checks if there is any customization for the response wrapper,
+     * and if not, it uses the default wrapper. It then processes each item in the 
+     * wrapper template, replacing placeholders with actual values.
+     *
+     * @return self
+     */
+    protected function prepareResponseWrapper(): self
+    {
+        $defaultWrapper = [
+            "meta" => [
+                "response_code" => "{{ response_code }}",
+                "host" => "{{ host }}",
+                "count" => "{{ count }}",
+                "runtime" => "{{ runtime }}"
+            ],
+            "data" => "{{ data }}"
+        ];
+
+        $wrapper = $defaultWrapper;
+        if (isset($this->customWrapper)) {
+            $wrapper = $this->customWrapper;
+        }
+
+        foreach ($wrapper as $key => $wrappedChild) {
+            if (is_array($wrappedChild)) {
+                foreach ($wrappedChild as $childKey => $child) {
+                    $wrapper[$key][$childKey] = $this->parseWrapperTemplate($child);
+                }
+            } else {
+                $wrapper[$key] = $this->parseWrapperTemplate($wrappedChild);
+            }
+        }
+
+        $this->finalResponse = $wrapper;
+
+        return $this;
+    }
+
+    /**
+     * Parses the wrapper template and replaces placeholders with actual values.
+     *
+     * This function replaces placeholders like {{ response_code }}, {{ host }},
+     * {{ count }}, and {{ runtime }} with their corresponding values from the 
+     * current class context, such as response code, host, count of data, and script runtime.
+     *
+     * @param mixed $templateItem The template string containing placeholders.
+     * @return mixed The parsed string with placeholders replaced by actual values.
+     */
+    private function parseWrapperTemplate(mixed $templateItem): mixed
+    {
+        $placeholders = [
+            "{{ response_code }}" => $this->responseCode,
+            "{{ host }}" => isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on" ? "https://" : "http://" . $_SERVER["HTTP_HOST"],
+            "{{ count }}" => is_array($this->response) || is_object($this->response) ? count($this->response) : 0,
+            "{{ runtime }}" => microtime(true) - $this->scriptStartTime,
+            "{{ data }}" => $this->response,
+        ];
+
+        foreach ($placeholders as $placeholder => $replacement) {
+            if (strpos($templateItem, $placeholder) !== false) {
+                if (is_string($replacement)) {
+                    $templateItem = str_replace($placeholder, $replacement, $templateItem);
+                }
+                $templateItem = $replacement;
+            }
+        }
+
+        return $templateItem;
     }
 }

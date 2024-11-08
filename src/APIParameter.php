@@ -64,7 +64,7 @@ class APIParameter
      * @param string $property The name of the parameter (e.g., 'user_id', 'email').
      * @return self Returns the current instance of the class to allow method chaining.
      */
-    public function setName(string $property): self
+    public function name(string $property): self
     {
         $this->parameterName = $property;
         return $this;

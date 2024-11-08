@@ -2,34 +2,58 @@
 
 ## Description
 
-This is a lightweight and extendable **PHP-API Framework** designed to help developers quickly build RESTful APIs. It supports common HTTP methods (GET, POST, PUT, DELETE) and provides a standardized JSON response structure. You can also customize the framework’s response wrapper to meet your specific needs.
+This is a lightweight and extendable **PHP-API Framework** designed to help developers quickly build RESTful APIs. It provides easy management of API parameters (GET, POST) with support for defining allowed parameters, their required status, and data types. It also allows for flexible response formatting, making it easy to create custom APIs.
 
 This framework can be easily integrated into any PHP project using Composer.
 
 ## Features
 
-- **Standardized JSON Response**: All responses are returned in JSON format.
-- **Custom Response Wrapper**: Allows you to define a custom response structure using a flexible wrapper.
-- **Easy API Integration**: Very easy to use and integrate into any PHP project.
+- **Standardized API Parameter Handling**: Easily manage allowed API parameters, including data types and required status.
+- **Custom Response Wrapper**: Define a custom response structure using a flexible wrapper.
 - **Flexible HTTP Method Support**: Supports GET, POST, PUT, DELETE HTTP methods.
 - **Meta Data**: The response includes metadata such as response code, server host, number of results, and script execution time.
+- **Data Type Management**: Support for defining and managing data types for each parameter.
 
 ## Usage
 
-Here is how you can use the `API` class in your project.
+Here is how you can use the `API` class along with `APIParameter` in your project.
 
-### Example: Simple API Request
+### Example: Define Allowed Parameters and Handle API Request
 
 ```php
 use devt045t\API;
+use devt045t\APIParameter;
+use devt045t\DataTypes;
+use devt045t\HTTPStatusCodes;
 
 $api = new API();
 
+// Define allowed parameters
+$param1 = new APIParameter();
+$param1
+  ->setName('username')
+  ->required(true)
+  ->type(DataTypes::STRING);
+
+$param2 = new APIParameter();
+$param2
+  ->setName('password')
+  ->required(true)
+  ->type(DataTypes::INT);
+
+// Add parameters to API instance
+$api
+  ->addParameter($param1)
+  ->addParameter($param2);
+
+// Retrieve all parameters
+$parameters = $api->getAllParameters();
+
 // Set the response data
-$api->setResponse(['message' => 'Hello, World!']);
+$api->setResponse(['message' => 'Parameters received successfully']);
 
 // Set the custom response code (optional)
-$api->setResponseCode(200);
+$api->setResponseCode(HTTPStatusCodes::OK);
 
 // Send the response
 $api->send();
@@ -48,7 +72,7 @@ The default response wrapper looks like this:
     "runtime": 0.02
   },
   "data": {
-    "message": "Hello, World!"
+    "message": "Parameters received successfully"
   }
 }
 ```
@@ -67,7 +91,7 @@ $customWrapper = [
 ];
 
 $api->setCustomWrapper($customWrapper);
-$api->setResponse(['message' => 'Hello, World!']);
+$api->setResponse(['message' => 'Parameters received successfully']);
 $api->send();
 ```
 
@@ -82,7 +106,7 @@ The response will be wrapped in the custom format:
     "execution_time": 0.02
   },
   "content": {
-    "message": "Hello, World!"
+    "message": "Parameters received successfully"
   }
 }
 ```
@@ -98,7 +122,25 @@ The response will be wrapped in the custom format:
 - `getAllParameters()`: Returns all given GET and POST parameters as an array.
 - `getGETParameters()`: Returns all given GET parameters as an array.
 - `getPOSTParameters()`: Returns all given POST parameters as an array.
-- `__get(string $property)`: ✨Magic✨ getter method for accessing properties dynamically through the $parameters array. Returns the property’s value or null if not found.
+- `__get(string $property)`: ✨Magic✨ getter method for accessing properties dynamically through the `$parameters` array. Returns the property’s value or null if not found.
+- `addParameter(APIParameter $parameter)`: Adds an allowed API parameter to the API instance. This defines the name, required status, and data type of the parameter.
+
+## API Parameter Management
+
+The `APIParameter` class helps you define the parameters for your API. Each parameter can be configured with the following properties:
+
+- **Name**: The name of the parameter (e.g., `username`, `age`).
+- **Required**: Whether the parameter is required for the request. Default is `false`.
+- **Data Type**: The data type for the parameter (e.g., `string`, `integer`, `boolean`).
+
+### Example of `APIParameter`:
+
+```php
+use devt045t\APIParameter;
+
+$param = new APIParameter();
+$param->setName('username')->required(true)->type('string');
+```
 
 ## Configuration Options
 
@@ -112,8 +154,6 @@ Example of custom wrapper placeholders:
 - `{{ data }}`
 
 You can use these placeholders to customize the structure of the API response.
-
----
 
 ## License
 
