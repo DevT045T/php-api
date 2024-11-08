@@ -96,6 +96,9 @@ The response will be wrapped in the custom format:
 - `getRequestMethod()`: Returns the HTTP request method (GET, POST, PUT, DELETE).
 - `prepareResponseWrapper()`: Prepares the response based on the current wrapper settings.
 - `getAllParameters()`: Returns all given GET and POST parameters as an array.
+- `getGETParameters()`: Returns all given GET parameters as an array.
+- `getPOSTParameters()`: Returns all given POST parameters as an array.
+- `__get(string $property)`: ✨Magic✨ getter method for accessing properties dynamically through the $parameters array. Returns the property’s value or null if not found.
 
 ## Configuration Options
 

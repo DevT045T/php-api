@@ -67,6 +67,26 @@ class API
     private array $parameters = [];
 
     /**
+     * An array to store all GET parameters.
+     *
+     * This private property holds all the GET parameters from the requests.
+     * It is used internally to manage incoming data for processing.
+     * 
+     * @var array An array that contains GET parameters.
+     */
+    private array $GETParameters = [];
+
+    /**
+     * An array to store all POST parameters.
+     *
+     * This private property holds all the POST parameters from the requests.
+     * It is used internally to manage incoming data for processing.
+     * 
+     * @var array An array that contains POST parameters.
+     */
+    private array $POSTParameters = [];
+
+    /**
      * Custom wrapper to modify the structure of the response.
      *
      * This array holds the customization options for the response wrapper.
@@ -87,6 +107,8 @@ class API
     public function __construct()
     {
         $this->parameters = [...$_POST, ...$_GET];
+        $this->GETParameters = $_GET;
+        $this->POSTParameters = [...(array)json_decode(file_get_contents('php://input')), ...$_POST];
 
         $this->scriptStartTime = microtime(true);
         $this->requesMethod = $_SERVER["REQUEST_METHOD"];
@@ -264,5 +286,48 @@ class API
     public function getAllParameters(): array
     {
         return $this->parameters;
+    }
+
+    /**
+     * Retrieves all GET parameters.
+     *
+     * This method returns an array containing all parameters from the GET requests.
+     * It provides access to the stored parameters for further processing
+     * or validation.
+     *
+     * @return array An array containing all GET parameters.
+     */
+    public function getGETParameters(): array
+    {
+        return $this->GETParameters;
+    }
+
+    /**
+     * Retrieves all POST parameters.
+     *
+     * This method returns an array containing all parameters from the POST requests.
+     * It provides access to the stored parameters for further processing
+     * or validation.
+     *
+     * @return array An array containing all POST parameters.
+     */
+    public function getPOSTParameters(): array
+    {
+        return $this->POSTParameters;
+    }
+
+    /**
+     * ✨Magic✨ getter method for accessing private or protected properties dynamically.
+     *
+     * This method allows reading properties in a controlled way by retrieving
+     * values from the `$parameters` array. It checks if a property exists in
+     * the `$parameters` array and returns its value if present.
+     *
+     * @param string $property The name of the property being accessed.
+     * @return mixed The value of the specified property, or null if it does not exist.
+     */
+    public function __get(string $property): mixed
+    {
+        return $this->parameters["$property"];
     }
 }
