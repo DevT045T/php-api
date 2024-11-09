@@ -5,11 +5,11 @@ namespace devt045t;
 /**
  * Class DataTypes
  * 
- * This class provides a list of common data types that can be used for API parameters or
+ * This class provides a list of common data types that can be used for Api parameters or
  * validation purposes. It acts as a central reference for various data types such as 
  * string, integer, boolean, and more.
  * 
- * @package PHP-API
+ * @package PHP-Api
  * @author t045t
  * @link https://t045t.dev
  * @license MIT

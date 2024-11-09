@@ -3,17 +3,17 @@
 namespace devt045t;
 
 /**
- * Class HTTPStatusCodes
+ * Class HttpStatusCodes
  * 
  * This class defines constants for all standard HTTP status codes. These codes indicate 
  * the result of an HTTP request, from successful responses to client and server errors.
  * 
- * @package PHP-API
+ * @package PHP-Api
  * @author t045t
  * @link https://t045t.dev
  * @license MIT
  */
-class HTTPStatusCodes {
+class HttpStatusCodes {
 
     // 1xx: Informational responses
 

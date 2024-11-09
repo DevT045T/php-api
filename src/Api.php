@@ -3,17 +3,17 @@
 namespace devt045t;
 
 /**
- * Class API
+ * Class Api
  * 
- * This class handles the request method for the API. It retrieves and stores the HTTP request
+ * This class handles the request method for the Api. It retrieves and stores the HTTP request
  * method (e.g., GET, POST, etc.) from the server, and provides a method to access the request method.
  * 
- * @package PHP-API
+ * @package PHP-Api
  * @author t045t
  * @link https://t045t.dev
  * @license MIT
  */
-class API
+class Api
 {
     /**
      * The HTTP request method (e.g., GET, POST, PUT, DELETE).
@@ -30,14 +30,14 @@ class API
     private array $allowedRequestMethods;
 
     /**
-     * The response data that the API returns to the user
+     * The response data that the Api returns to the user
      * 
      * @var mixed
      */
     public mixed $response;
 
     /**
-     * The response code that the API returns to the user
+     * The response code that the Api returns to the user
      * Default is `OK - 200`
      * 
      * @var int
@@ -104,11 +104,11 @@ class API
     private array $customWrapper;
 
     /**
-     * This property holds an array of `APIParameter` objects that define the allowed
-     * parameters for the API request. Each `APIParameter` object includes information
+     * This property holds an array of `ApiParameter` objects that define the allowed
+     * parameters for the Api request. Each `ApiParameter` object includes information
      * such as the parameter name, whether it is required, and its expected data type.
      * 
-     * @var APIParameter[] An array of allowed API parameters.
+     * @var ApiParameter[] An array of allowed Api parameters.
      */
     private array $allowedParameters = [];
 
@@ -138,7 +138,7 @@ class API
      */
     public function __construct()
     {
-        $this->parameters = [...$_POST, ...$_GET];
+        $this->parameters = [...(array)json_decode(file_get_contents('php://input')), ...$_POST, ...$_GET];
         $this->GETParameters = $_GET;
         $this->POSTParameters = [...(array)json_decode(file_get_contents('php://input')), ...$_POST];
 
@@ -163,11 +163,11 @@ class API
     }
 
     /**
-     * Sets the allowed request methods for the API.
+     * Sets the allowed request methods for the Api.
      * 
      * This method allows you to define which HTTP request methods (e.g., GET, POST, PUT, DELETE) 
-     * are allowed for the current API endpoint. By passing an array, you can allow multiple 
-     * request methods for a single endpoint. This is useful for defining flexible API behavior 
+     * are allowed for the current Api endpoint. By passing an array, you can allow multiple 
+     * request methods for a single endpoint. This is useful for defining flexible Api behavior 
      * where more than one HTTP method can be used for the same resource.
      * 
      * @param array $requestMethods An array of allowed HTTP request methods (e.g., ['GET', 'POST', 'PUT']).
@@ -182,16 +182,16 @@ class API
 
 
     /**
-     * Sets the response data for the API.
+     * Sets the response data for the Api.
      * 
      * This method accepts the response data (which can be any type) and stores it in the
-     * response property. It returns the current instance of the API class to allow for
+     * response property. It returns the current instance of the Api class to allow for
      * method chaining.
      * 
      * @param mixed $data The response data to be set. This can be any data type, such as an array,
      *                    object, string, etc.
      * 
-     * @return API Returns the current instance of the API class for method chaining.
+     * @return Api Returns the current instance of the Api class for method chaining.
      */
     public function setResponse($data): self
     {
@@ -200,15 +200,15 @@ class API
     }
 
     /**
-     * Sets the HTTP response code for the API response.
+     * Sets the HTTP response code for the Api response.
      * 
-     * This method sets the response code to be returned in the API response. The code is typically
+     * This method sets the response code to be returned in the Api response. The code is typically
      * an integer representing the HTTP status code (e.g., 200 for success, 404 for not found). 
-     * You can use the constants from the `HTTPStatusCodes` class for convenience.
+     * You can use the constants from the `HttpStatusCodes` class for convenience.
      * 
      * @param int $responseCode The HTTP status code (e.g., 200, 404, 500, etc.).
      * 
-     * @return $this The current instance of the API class for method chaining.
+     * @return $this The current instance of the Api class for method chaining.
      */
     public function setResponseCode(int $responseCode): self
     {
@@ -217,7 +217,7 @@ class API
     }
 
     /**
-     * Sends the API response to the client.
+     * Sends the Api response to the client.
      * 
      * This method sets the appropriate HTTP headers, including the `Content-Type` header
      * for JSON responses, and sets the HTTP response code using the value stored in the 
@@ -313,37 +313,54 @@ class API
     }
 
     /**
-     * Adds an allowed parameter to the list of allowed API parameters.
+     * Adds an allowed parameter to the list of allowed Api parameters.
      * 
-     * This method accepts an `APIParameter` object, which defines the name, 
+     * This method accepts an `ApiParameter` object, which defines the name, 
      * required status, and data type of a parameter. It adds this parameter 
      * to the `allowedParameters` array, which is later used to validate incoming
-     * API requests.
+     * Api requests.
      * 
-     * @param APIParameter $parameter The `APIParameter` object to add.
+     * @param ApiParameter $parameter The `ApiParameter` object to add.
      * 
      * @return self Returns the current instance of the class, allowing for method chaining.
      */
-    public function addParameter(APIParameter $parameter): self
+    public function addParameter(ApiParameter $parameter): self
     {
         $this->allowedParameters[] = $parameter;
         return $this;
     }
 
     /**
-     * Validates the request method against the allowed methods.
-     * 
-     * This method checks if the current request method is one of the allowed methods defined for
-     * the API endpoint. If the request method is not allowed, an error response will be sent
-     * with a 400 Bad Request status code.
-     * 
-     * @return void
+     * Validates the request by checking the request method, allowed parameters, required parameters,
+     * and data types of provided parameters.
+     *
+     * - Ensures the request method is allowed.
+     * - Validates that only allowed parameters are provided.
+     * - Checks if all required parameters are included in the request.
+     * - Validates that each parameter matches the expected data type.
+     *
      */
     public function validate(): void
     {
         if (!in_array($this->requestMethod, $this->allowedRequestMethods)) {
-            $this->sendErrorResponse(HTTPStatusCodes::BAD_REQUEST, "The request method is not allowed for this resource.", [$this->requestMethod]);
+            $this->sendErrorResponse(
+                HttpStatusCodes::BAD_REQUEST,
+                "The request method is not allowed for this resource.",
+                [$this->requestMethod]
+            );
         }
+
+        $allowedPOSTParameters = $this->getAllowedParameters(HttpMethods::POST);
+        $requiredPOSTParameters = $this->getRequiredParameters(HttpMethods::POST);
+        $givenPOSTParameters = $this->getPOSTParameters();
+
+        $this->validateParameters($givenPOSTParameters, $allowedPOSTParameters, $requiredPOSTParameters, HttpMethods::POST);
+
+        $allowedGETParameters = $this->getAllowedParameters(HttpMethods::GET);
+        $requiredGETParameters = $this->getRequiredParameters(HttpMethods::GET);
+        $givenGETParameters = $this->getGETParameters();
+
+        $this->validateParameters($givenGETParameters, $allowedGETParameters, $requiredGETParameters, HttpMethods::GET);
     }
 
     /**
@@ -455,5 +472,87 @@ class API
         }
 
         return $templateItem;
+    }
+
+    /**
+     * Validates given parameters against allowed and required parameters,
+     * and checks if the data types of the given parameters match the expected data types.
+     *
+     * @param array $givenParameters Parameters provided in the request.
+     * @param array $allowedParameters List of allowed parameter metadata.
+     * @param array $requiredParameters List of required parameter metadata.
+     * @param string $method The HTTP method being validated (e.g., "POST" or "GET").
+     */
+    private function validateParameters(array $givenParameters, array $allowedParameters, array $requiredParameters, string $method): void
+    {
+        $allowedParamNames = array_column($allowedParameters, 'parameter_name');
+        $requiredParamNames = array_column($requiredParameters, 'parameter_name');
+
+        $givenParamNames = array_keys($givenParameters);
+
+        $unexpectedParameters = array_diff($givenParamNames, $allowedParamNames);
+        if (!empty($unexpectedParameters)) {
+            $this->sendErrorResponse(
+                HttpStatusCodes::BAD_REQUEST,
+                "Some given {$method} parameters are not allowed for this resource",
+                $unexpectedParameters
+            );
+        }
+
+        $missingParameters = array_diff($requiredParamNames, $givenParamNames);
+        if (!empty($missingParameters)) {
+            $this->sendErrorResponse(
+                HttpStatusCodes::BAD_REQUEST,
+                "Some necessary {$method} parameters are not given to this resource",
+                $missingParameters
+            );
+        }
+
+        foreach ($givenParameters as $paramName => $paramValue) {
+            foreach ($allowedParameters as $allowedParam) {
+                if ($allowedParam['parameter_name'] === $paramName) {
+                    $expectedType = $allowedParam['data_type'];
+                    if (!DataTypes::isType($paramValue, $expectedType)) {
+                        $this->sendErrorResponse(
+                            HttpStatusCodes::BAD_REQUEST,
+                            "Invalid data type for {$method} parameter '{$paramName}'.",
+                            [$paramName => $expectedType]
+                        );
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Retrieves allowed parameters for a specific HTTP method.
+     *
+     * @param string $method The HTTP method (e.g., "POST" or "GET").
+     * @return array List of allowed parameter metadata.
+     */
+    private function getAllowedParameters(string $method): array
+    {
+        return array_map(
+            fn($param) => $param->returnMeta(),
+            array_filter($this->allowedParameters, fn($param) => in_array($method, $param->returnMeta()["allowed_methods"]))
+        );
+    }
+
+    /**
+     * Retrieves required parameters for a specific HTTP method.
+     *
+     * @param string $method The HTTP method (e.g., "POST" or "GET").
+     * @return array List of required parameter metadata.
+     */
+    private function getRequiredParameters(string $method): array
+    {
+        return array_map(
+            fn($param) => $param->returnMeta(),
+            array_filter($this->allowedParameters, function ($param) use ($method) {
+                $meta = $param->returnMeta();
+                return in_array($method, $meta["allowed_methods"]) && $meta["is_required"];
+            })
+        );
     }
 }
