@@ -147,6 +147,7 @@ class Api
 
         $this->scriptStartTime = microtime(true);
         $this->requestMethod = $_SERVER["REQUEST_METHOD"];
+        $this->allowedRequestMethods = [];
     }
 
     /**

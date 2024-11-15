@@ -15,6 +15,62 @@ This framework can be easily integrated into any PHP project using Composer.
 - **Meta Data**: The response includes metadata such as response code, server host, number of results, and script execution time.
 - **Data Type Management**: Support for defining and managing data types for each parameter.
 
+## Installation via Composer
+
+To use the **PHP-Api Framework** in your project, follow these steps:
+
+### 1. Install Composer
+
+Ensure that [Composer](https://getcomposer.org/) is installed on your system. If it's not installed yet, you can install it using the following command:
+
+```bash
+curl -sS https://getcomposer.org/installer | php
+```
+
+### 2. Add the Framework to Your Project
+
+To install the framework from GitHub, specify the `develop` branch. You can do this by running the following command:
+
+```bash
+composer require devt045t/php-api:develop
+```
+
+Alternatively, if the package is not listed on Packagist, you can add the GitHub repository manually in your `composer.json` under the `"repositories"` section:
+
+```json
+{
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/DevT045T/php-api.git"
+        }
+    ],
+    "require": {
+        "devt045t/php-api": "develop"
+    }
+}
+```
+
+Then run:
+
+```bash
+composer install
+```
+
+This will install the framework from the `develop` branch and download all necessary files.
+
+### 3. Enable Autoloading
+
+Ensure that Composer's autoloader is included in your project. Add this line at the beginning of your PHP file:
+
+```php
+require 'vendor/autoload.php';
+```
+
+### 4. Use the Framework
+
+You can now use the framework in your project. For more information on how to use it, refer to the [Usage](#Usage) section of this documentation.
+
 ## Usage
 
 ### Example: Define Allowed Parameters and Handle API Request
@@ -24,19 +80,20 @@ use devt045t\Api;
 use devt045t\ApiParameter;
 use devt045t\DataTypes;
 use devt045t\HttpStatusCodes;
+use devt045t\HttpMethods;
 
 $api = new Api();
 
 // Define allowed parameters
 $param1 = new ApiParameter();
 $param1
-  ->setName('username')
+  ->name('username')
   ->required(true)
   ->type(DataTypes::STRING);
 
 $param2 = new ApiParameter();
 $param2
-  ->setName('password')
+  ->name('password')
   ->required(true)
   ->type(DataTypes::INT);
 
@@ -44,6 +101,9 @@ $param2
 $api
   ->addParameter($param1)
   ->addParameter($param2);
+
+// Set the allowed request methods
+$api->setAllowedRequestMethod([HttpMethods::OPTIONS, HttpMethods::POST]);
 
 // Validate parameters
 $api->validate();
@@ -151,7 +211,7 @@ use devt045t\ApiParameter;
 use devt045t\DataTypes;
 
 $param = new ApiParameter();
-$param->setName('username')->required(true)->type(DataTypes::STRING);
+$param->name('username')->required(true)->type(DataTypes::STRING);
 ```
 
 ### Supported Data Types

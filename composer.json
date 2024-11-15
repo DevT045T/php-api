@@ -1,0 +1,17 @@
+{
+    "name": "t045t/php-api",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "devt045t\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "DevT045T",
+            "email": "info@t045t.dev"
+        }
+    ],
+    "require": {}
+}
