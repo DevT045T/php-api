@@ -1,6 +1,7 @@
 {
     "name": "t045t/php-api",
     "type": "library",
+    "description": "A lightweight and extendable PHP-Api framework for building RESTful APIs",
     "license": "MIT",
     "autoload": {
         "psr-4": {
