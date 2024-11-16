@@ -29,25 +29,19 @@ curl -sS https://getcomposer.org/installer | php
 
 ### 2. Add the Framework to Your Project
 
-To install the framework from GitHub, specify the `develop` branch. You can do this by running the following command:
-
-```bash
-composer require devt045t/php-api:develop
-```
-
-Alternatively, if the package is not listed on Packagist, you can add the GitHub repository manually in your `composer.json` under the `"repositories"` section:
-
 ```json
 {
+    "require": {
+        "t045t/php-api": "dev-develop"
+    },
     "repositories": [
         {
-            "type": "git",
+            "type": "vcs",
             "url": "https://github.com/DevT045T/php-api.git"
         }
     ],
-    "require": {
-        "devt045t/php-api": "develop"
-    }
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
 ```
 
@@ -89,12 +83,14 @@ $param1 = new ApiParameter();
 $param1
   ->name('username')
   ->required(true)
+  ->methods([HttpMethods::POST])
   ->type(DataTypes::STRING);
 
 $param2 = new ApiParameter();
 $param2
   ->name('password')
   ->required(true)
+  ->methods([HttpMethods::POST])
   ->type(DataTypes::INT);
 
 // Add parameters to API instance
@@ -203,6 +199,7 @@ The `ApiParameter` class helps you define the parameters for your API. Each para
 - **Name**: The name of the parameter (e.g., `username`, `age`).
 - **Required**: Whether the parameter is required for the request. Default is `false`.
 - **Data Type**: The data type for the parameter (e.g., `string`, `integer`, `boolean`).
+- **Methods**: The allowed HTTP methods for the parameter (e.g., `POST` or `GET`).
 
 ### Example of `ApiParameter`:
 
@@ -211,7 +208,7 @@ use devt045t\ApiParameter;
 use devt045t\DataTypes;
 
 $param = new ApiParameter();
-$param->name('username')->required(true)->type(DataTypes::STRING);
+$param->name('username')->required(true)->methods([HttpMethods::POST])->type(DataTypes::STRING);
 ```
 
 ### Supported Data Types
